@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "hearth": {
+      "command": "node",
+      "args": ["<ABSOLUTE_PATH_TO_REPO>/packages/mcp/dist/index.js"],
+      "env": {
+        "HEARTH_VAULT": "<ABSOLUTE_PATH_TO_YOUR_VAULT>"
+      }
+    }
+  }
+}

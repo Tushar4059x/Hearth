@@ -1,0 +1,40 @@
+{
+  "name": "hearth-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Hearth — local-first shared memory for AI agents, and your second brain.",
+  "license": "MIT",
+  "author": "Tushar Gulyani",
+  "homepage": "https://github.com/Tushar4059x/Hearth#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tushar4059x/Hearth.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Tushar4059x/Hearth/issues"
+  },
+  "keywords": [
+    "mcp",
+    "memory",
+    "ai-agents",
+    "second-brain",
+    "obsidian",
+    "markdown",
+    "local-first"
+  ],
+  "scripts": {
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "clean": "pnpm -r exec rm -rf dist"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "pnpm@10.2.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3"
+    ]
+  }
+}

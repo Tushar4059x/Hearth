@@ -1,0 +1,31 @@
+{
+  "name": "@hearth/cli",
+  "version": "0.1.0",
+  "description": "Hearth command-line interface.",
+  "license": "MIT",
+  "author": "Tushar Gulyani",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tushar4059x/Hearth.git",
+    "directory": "packages/cli"
+  },
+  "type": "module",
+  "bin": {
+    "hearth": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@hearth/core": "workspace:*",
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "typescript": "^5.7.3"
+  }
+}

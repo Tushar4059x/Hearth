@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+
+# Hearth's search index is derived from the markdown files (the source of truth),
+# so it never needs to be committed.
+**/.hearth/index.db
+**/.hearth/index.db-*
+
+# Local MCP wiring has machine-specific absolute paths — commit .mcp.json.example instead.
+.mcp.json
