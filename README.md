@@ -1,61 +1,52 @@
-# 🔥 Hearth
+# Hearth
 
-**Local-first shared memory for AI agents — and your second brain, in one folder.**
+**Local-first shared memory for AI agents, stored as plain markdown.**
 
-[![hearth-mcp](https://img.shields.io/npm/v/hearth-mcp?label=hearth-mcp)](https://www.npmjs.com/package/hearth-mcp) [![hearth-cli](https://img.shields.io/npm/v/hearth-cli?label=hearth-cli)](https://www.npmjs.com/package/hearth-cli) [![license: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![hearth-cli](https://img.shields.io/npm/v/hearth-cli?label=hearth-cli&color=cb3837&logo=npm)](https://www.npmjs.com/package/hearth-cli)
+[![hearth-mcp](https://img.shields.io/npm/v/hearth-mcp?label=hearth-mcp&color=cb3837&logo=npm)](https://www.npmjs.com/package/hearth-mcp)
+[![hearth-core](https://img.shields.io/npm/v/hearth-core?label=hearth-core&color=cb3837&logo=npm)](https://www.npmjs.com/package/hearth-core)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-You work across Claude, Cursor, Antigravity, Codex, ChatGPT… and re-explain the
-same project context to each one. Hearth fixes that. It's a single folder of
-markdown files that every AI agent can read and write through one shared memory
-layer — and because it's *just markdown*, [Obsidian](https://obsidian.md) opens
-the same folder as a vault. Your data stays on your machine, in plain text,
-yours forever.
+Hearth gives Claude, Cursor, Codex, ChatGPT, Antigravity, and any other
+MCP-capable agent one shared memory folder. Decisions, preferences, project
+context, snippets, and notes are saved once, then recalled everywhere.
 
-```
-            ┌──────────────────────────────────────────┐
-            │            HEARTH CORE                     │
-            │  • Markdown + YAML frontmatter (truth)     │
-            │  • [[wikilinks]] between notes             │
-            │  • SQLite FTS5 keyword search              │
-            │  • Scopes: global / project / session      │
-            └──────────────────────────────────────────┘
-                 ▲           ▲            ▲
-            ┌────┴───┐  ┌────┴────┐  ┌────┴────┐
-            │  MCP   │  │   CLI   │  │ Obsidian│
-            │ server │  │ (hearth)│  │ (vault) │
-            └────────┘  └─────────┘  └─────────┘
-        Claude · Cursor · Antigravity · Codex
-```
+No hosted account. No proprietary database. No lock-in. The source of truth is a
+folder of markdown files that you can open in Obsidian, edit by hand, back up
+with Git, or move anywhere.
 
-## Status
+## Why Hearth
 
-✅ **Phase 1 (foundations)** — markdown store, FTS5 search, `hearth` CLI.
-✅ **Phase 2 (MCP server)** — agents connect over MCP; live file watcher keeps
-the index in sync with Obsidian edits. See [docs/clients.md](docs/clients.md) to
-wire up Claude, Cursor, Antigravity, or Codex.
-✅ **Published to npm** — [`hearth-cli`](https://www.npmjs.com/package/hearth-cli), [`hearth-mcp`](https://www.npmjs.com/package/hearth-mcp), [`hearth-core`](https://www.npmjs.com/package/hearth-core) (v0.1.0).
-🔜 **Next** — pluggable semantic search, then consolidation/dedup.
+- **One memory across agents**: stop re-explaining the same project context in
+  every tool.
+- **Local-first and private**: your notes stay on your machine as markdown.
+- **Obsidian-ready**: the vault is a normal folder with frontmatter,
+  `[[wikilinks]]`, and readable files.
+- **Fast recall**: SQLite FTS5 indexes notes for ranked keyword search.
+- **Agent-friendly**: the MCP server exposes simple `memory_*` tools.
+- **Proactive setup**: `hearth init` can add an `AGENTS.md` block so agents load
+  context and save durable decisions automatically.
 
-## Packages
+## Quick Start
 
-| Package | What it does |
-| --- | --- |
-| [`hearth-core`](packages/core) | The engine: markdown note store + SQLite FTS5 index |
-| [`hearth-cli`](packages/cli) | `hearth init / save / search / list / reindex / doctor` |
-| [`hearth-mcp`](packages/mcp) | MCP server exposing `memory_search / save / get / list / context` |
-
-## Install
+Install the CLI and create a vault:
 
 ```bash
-npm install -g hearth-cli      # gives you the `hearth` command
-hearth init ~/hearth           # create a vault (also an Obsidian vault)
+npm install -g hearth-cli
+hearth init ~/hearth
 ```
 
-`hearth init` also drops a Hearth block into `./AGENTS.md` so agents use the memory
-proactively (call `memory_context` at the start, `memory_save` on decisions). Run
-`hearth rules` to add it to your other projects, or `hearth init --no-agents` to skip.
+Save and search a memory:
 
-Connect any MCP-capable agent (Claude, Cursor, Antigravity, Codex…) by adding this to its MCP config — no clone, no build:
+```bash
+hearth --vault ~/hearth save "Postgres is the datastore" \
+  -c "We chose Postgres because relational integrity matters here." \
+  -t decision -s project -p my-app --tags architecture,db
+
+hearth --vault ~/hearth search postgres
+```
+
+Connect an MCP client:
 
 ```json
 {
@@ -63,52 +54,128 @@ Connect any MCP-capable agent (Claude, Cursor, Antigravity, Codex…) by adding 
     "hearth": {
       "command": "npx",
       "args": ["-y", "hearth-mcp"],
-      "env": { "HEARTH_VAULT": "/absolute/path/to/your/vault" }
+      "env": {
+        "HEARTH_VAULT": "/absolute/path/to/your/hearth"
+      }
     }
   }
 }
 ```
 
-`npx hearth-mcp` pulls `hearth-core` automatically. Full per-client setup (Claude, Cursor, Antigravity, Codex) is in [docs/clients.md](docs/clients.md).
+Client-specific setup for Claude, Cursor, Antigravity, and Codex lives in
+[docs/clients.md](docs/clients.md).
 
-## Quick start (dev)
+## How It Works
+
+```text
+              plain markdown files
+        global/  projects/  sessions/
+                    |
+                    v
+              hearth-core
+        markdown store + SQLite FTS5
+              /              \
+             v                v
+        hearth-cli        hearth-mcp
+                          memory tools
+```
+
+Hearth writes each memory as a markdown file with YAML frontmatter. The SQLite
+index is derived data and can always be rebuilt with `hearth reindex`.
+
+The MCP server rebuilds the index on startup and watches the vault for direct
+edits from Obsidian, other agents, or Git operations.
+
+## MCP Tools
+
+| Tool | Purpose |
+| --- | --- |
+| `memory_context` | Load global preferences, global decisions, and project notes |
+| `memory_search` | Search memories by keyword with optional scope/type filters |
+| `memory_save` | Save or update one atomic memory |
+| `memory_get` | Fetch a memory by ULID or exact title |
+| `memory_list` | List recent memories, optionally filtered |
+
+## Memory Format
+
+Each memory is just markdown:
+
+```markdown
+---
+id: 01HX9K8Q...
+title: Postgres is the datastore
+type: decision
+scope: project
+project: my-app
+tags: [architecture, db]
+source: codex
+created: 2026-06-15T10:00:00.000Z
+updated: 2026-06-15T10:00:00.000Z
+confidence: high
+---
+
+We chose Postgres because relational integrity matters here.
+```
+
+Supported note types:
+
+```text
+fact | decision | preference | reference | task | snippet
+```
+
+Supported scopes:
+
+```text
+global | project | session
+```
+
+## CLI
+
+```bash
+hearth init [dir]               # create or repair a vault
+hearth save "<title>" -c "..."  # save a memory
+hearth search <query>           # keyword search
+hearth list                     # recent notes
+hearth reindex                  # rebuild SQLite from markdown
+hearth doctor                   # compare on-disk notes with indexed notes
+hearth rules [dir]              # add Hearth instructions to AGENTS.md
+```
+
+The CLI resolves the vault in this order:
+
+```text
+--vault <path> -> HEARTH_VAULT -> nearest parent vault -> ~/hearth
+```
+
+## Packages
+
+| Package | Description |
+| --- | --- |
+| [`hearth-core`](packages/core) | Core markdown store, vault helpers, and SQLite FTS index |
+| [`hearth-cli`](packages/cli) | The `hearth` command |
+| [`hearth-mcp`](packages/mcp) | MCP stdio server exposing shared memory tools |
+
+## Development
 
 ```bash
 git clone https://github.com/Tushar4059x/Hearth.git
 cd Hearth
 pnpm install
+pnpm typecheck
 pnpm build
-
-# create a vault (also an Obsidian vault)
-node packages/cli/dist/index.js init ~/hearth
-
-# save and search memories
-node packages/cli/dist/index.js --vault ~/hearth save "Postgres is the datastore" \
-  -c "We chose Postgres over Mongo for relational integrity." -t decision -s project -p shared-mem
-node packages/cli/dist/index.js --vault ~/hearth search postgres
+node packages/mcp/smoke.mjs
 ```
 
-## A note's shape
+This is a TypeScript ESM pnpm workspace. Build output goes to each package's
+`dist/` directory.
 
-Each memory is one markdown file. Open the vault in Obsidian and it just works:
+## Roadmap
 
-```markdown
----
-id: 01HX9K8Q...        # stable ULID — survives renames (future team-sync key)
-title: Postgres is the datastore
-type: decision          # fact | decision | preference | reference | task | snippet
-scope: project          # global | project | session
-project: shared-mem
-tags: [architecture, db]
-source: cli
-created: 2026-06-14T...
-updated: 2026-06-14T...
-confidence: high
----
-
-We chose Postgres over Mongo for relational integrity. See [[why-not-mongo]].
-```
+- Semantic search with pluggable local or hosted embeddings
+- Memory consolidation, deduplication, and conflict resolution
+- Optional encrypted sync
+- Team/shared vault workflows
 
 ## License
 
-MIT — open source, one-stop solution for scattered context & memory.
+MIT © Tushar

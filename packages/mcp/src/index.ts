@@ -69,7 +69,7 @@ async function main(): Promise<void> {
   watcher.on('change', onUpsert);
   watcher.on('unlink', (rel) => hearth.removeFile(path.resolve(hearth.vault, rel)));
 
-  const server = new McpServer({ name: 'hearth', version: '0.1.0' });
+  const server = new McpServer({ name: 'hearth', version: '0.1.1' });
 
   server.registerTool(
     'memory_search',

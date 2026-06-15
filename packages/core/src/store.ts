@@ -12,6 +12,7 @@ import type {
   SaveInput,
   Scope,
 } from './types.js';
+import { isConfidence, isNoteType, isScope } from './types.js';
 
 const DEFAULT_TYPE: NoteType = 'fact';
 const DEFAULT_SCOPE: Scope = 'global';
@@ -62,14 +63,14 @@ export function parseNote(filePath: string): Note | null {
   return {
     id: String(d.id),
     title: String(d.title),
-    type: (d.type as NoteType) ?? DEFAULT_TYPE,
-    scope: (d.scope as Scope) ?? DEFAULT_SCOPE,
+    type: isNoteType(d.type) ? d.type : DEFAULT_TYPE,
+    scope: isScope(d.scope) ? d.scope : DEFAULT_SCOPE,
     project: d.project != null ? String(d.project) : null,
     tags: Array.isArray(d.tags) ? d.tags.map(String) : [],
     source: d.source ? String(d.source) : 'unknown',
     created: d.created ? String(d.created) : new Date().toISOString(),
     updated: d.updated ? String(d.updated) : new Date().toISOString(),
-    confidence: (d.confidence as Confidence) ?? DEFAULT_CONFIDENCE,
+    confidence: isConfidence(d.confidence) ? d.confidence : DEFAULT_CONFIDENCE,
     body: parsed.content.trim(),
     path: path.resolve(filePath),
   };

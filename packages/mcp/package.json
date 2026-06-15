@@ -1,6 +1,6 @@
 {
   "name": "hearth-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Hearth MCP server — shared memory tools for AI agents.",
   "license": "MIT",
   "author": "Tushar",

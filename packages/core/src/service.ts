@@ -44,7 +44,11 @@ export class Hearth {
   /** Index a single markdown file by absolute path (used by the live watcher). */
   indexFile(absPath: string): Note | null {
     const note = parseNote(absPath);
-    if (note) this.db.upsert(note);
+    if (note) {
+      this.db.upsert(note);
+    } else {
+      this.db.removeByPath(absPath);
+    }
     return note;
   }
 

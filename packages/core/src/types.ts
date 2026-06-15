@@ -14,6 +14,22 @@ export type Scope = (typeof SCOPES)[number];
 export const CONFIDENCE_LEVELS = ['low', 'medium', 'high'] as const;
 export type Confidence = (typeof CONFIDENCE_LEVELS)[number];
 
+function includes<const T extends readonly string[]>(values: T, value: unknown): value is T[number] {
+  return typeof value === 'string' && values.includes(value as T[number]);
+}
+
+export function isNoteType(value: unknown): value is NoteType {
+  return includes(NOTE_TYPES, value);
+}
+
+export function isScope(value: unknown): value is Scope {
+  return includes(SCOPES, value);
+}
+
+export function isConfidence(value: unknown): value is Confidence {
+  return includes(CONFIDENCE_LEVELS, value);
+}
+
 /** The frontmatter stored at the top of every note's markdown file. */
 export interface NoteFrontmatter {
   /** Stable ULID. Survives file renames; the key for future team sync. */

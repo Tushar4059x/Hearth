@@ -1,14 +1,19 @@
 // Smoke test: spawn the built MCP server over stdio and exercise its tools.
-// Usage: node packages/mcp/smoke.mjs  (expects HEARTH_VAULT or defaults to /tmp/hearth-test)
+// Usage: node packages/mcp/smoke.mjs  (uses HEARTH_VAULT or creates /tmp/hearth-test)
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { initVault, isVault } from 'hearth-core';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const serverPath = path.join(here, 'dist', 'index.js');
 const vault = process.env.HEARTH_VAULT ?? '/tmp/hearth-test';
+
+if (!isVault(vault)) {
+  initVault(vault);
+}
 
 const transport = new StdioClientTransport({
   command: 'node',

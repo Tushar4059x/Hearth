@@ -11,8 +11,10 @@ import {
   writeAgentsInstructions,
   NOTE_TYPES,
   SCOPES,
+  CONFIDENCE_LEVELS,
   type NoteType,
   type Scope,
+  type Confidence,
 } from 'hearth-core';
 
 const program = new Command();
@@ -20,7 +22,7 @@ const program = new Command();
 program
   .name('hearth')
   .description('Hearth — local-first shared memory for AI agents (and your second brain)')
-  .version('0.1.0')
+  .version('0.1.1')
   .option('--vault <path>', 'path to the Hearth vault (else $HEARTH_VAULT or nearest vault)');
 
 function vaultOption(): string | undefined {
@@ -47,6 +49,25 @@ function splitTags(csv?: string): string[] {
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
+}
+
+function parseChoice<const T extends readonly string[]>(
+  name: string,
+  value: string | undefined,
+  choices: T,
+  fallback: T[number],
+): T[number] {
+  const actual = value ?? fallback;
+  if (choices.includes(actual as T[number])) return actual as T[number];
+  throw new Error(`invalid ${name}: ${actual}. Expected one of: ${choices.join(', ')}`);
+}
+
+function parseLimit(value: string | undefined, fallback: number): number {
+  const n = Number(value ?? fallback);
+  if (!Number.isInteger(n) || n < 1) {
+    throw new Error(`invalid limit: ${value}. Expected a positive integer.`);
+  }
+  return n;
 }
 
 program
@@ -94,12 +115,12 @@ program
       const note = h.save({
         title,
         content,
-        type: o.type as NoteType,
-        scope: o.scope as Scope,
+        type: parseChoice('type', o.type, NOTE_TYPES, 'fact') as NoteType,
+        scope: parseChoice('scope', o.scope, SCOPES, 'global') as Scope,
         project: o.project ?? null,
         tags: splitTags(o.tags),
         source: o.source,
-        confidence: o.confidence as 'low' | 'medium' | 'high' | undefined,
+        confidence: parseChoice('confidence', o.confidence, CONFIDENCE_LEVELS, 'medium') as Confidence,
       });
       console.log(`✓ saved  [${note.type}/${note.scope}${note.project ? '/' + note.project : ''}]  ${note.title}`);
       console.log(`  file: ${note.path}`);
@@ -121,10 +142,10 @@ program
     const h = openVault();
     try {
       const results = h.search(query.join(' '), {
-        scope: o.scope as Scope | undefined,
+        scope: o.scope ? (parseChoice('scope', o.scope, SCOPES, 'global') as Scope) : undefined,
         project: o.project,
-        type: o.type as NoteType | undefined,
-        limit: Number(o.limit ?? 20),
+        type: o.type ? (parseChoice('type', o.type, NOTE_TYPES, 'fact') as NoteType) : undefined,
+        limit: parseLimit(o.limit, 20),
       });
       if (results.length === 0) {
         console.log('no matches.');
@@ -153,10 +174,10 @@ program
     const h = openVault();
     try {
       const notes = h.list({
-        scope: o.scope as Scope | undefined,
+        scope: o.scope ? (parseChoice('scope', o.scope, SCOPES, 'global') as Scope) : undefined,
         project: o.project,
-        type: o.type as NoteType | undefined,
-        limit: Number(o.limit ?? 50),
+        type: o.type ? (parseChoice('type', o.type, NOTE_TYPES, 'fact') as NoteType) : undefined,
+        limit: parseLimit(o.limit, 50),
       });
       for (const n of notes) {
         console.log(`${n.updated.slice(0, 10)}  [${n.type}/${n.scope}]  ${n.title}`);
