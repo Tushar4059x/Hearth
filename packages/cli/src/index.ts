@@ -8,6 +8,7 @@ import {
   initVault,
   isVault,
   walkNotes,
+  writeAgentsInstructions,
   NOTE_TYPES,
   SCOPES,
   type NoteType,
@@ -52,13 +53,23 @@ program
   .command('init')
   .description('Create a new Hearth vault (also an Obsidian vault)')
   .argument('[dir]', 'directory for the vault', defaultVaultPath())
-  .action((dir: string) => {
+  .option('--no-agents', 'skip writing Hearth usage instructions to ./AGENTS.md')
+  .action((dir: string, o: { agents?: boolean }) => {
     const vault = initVault(dir);
     const p = hearthPaths(vault);
     console.log(`✓ Hearth vault ready at ${vault}`);
     console.log('  • open this folder in Obsidian to browse it as a vault');
     console.log(`  • global notes:  ${p.global}`);
     console.log(`  • project notes: ${p.projects}/<project>`);
+
+    if (o.agents !== false) {
+      const { result, file } = writeAgentsInstructions(process.cwd());
+      const verb =
+        result === 'created' ? 'wrote' : result === 'appended' ? 'appended instructions to' : 'already in';
+      console.log(`\n✓ agent instructions ${verb} ${file}`);
+      console.log('  → so agents proactively use this memory. Run `hearth rules` in other projects too.');
+    }
+
     console.log(`\nTry:  hearth --vault ${vault} save "My first note" -c "hello, brain"`);
   });
 
@@ -195,6 +206,17 @@ program
     } finally {
       h.close();
     }
+  });
+
+program
+  .command('rules')
+  .description('Write/append Hearth usage instructions to AGENTS.md (run in a project dir)')
+  .argument('[dir]', 'project directory', '.')
+  .action((dir: string) => {
+    const { result, file } = writeAgentsInstructions(dir);
+    const verb =
+      result === 'created' ? 'wrote' : result === 'appended' ? 'appended instructions to' : 'already present in';
+    console.log(`✓ Hearth instructions ${verb} ${file}`);
   });
 
 program.parseAsync(process.argv).catch((err: unknown) => {

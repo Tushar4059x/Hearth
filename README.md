@@ -51,6 +51,10 @@ npm install -g hearth-cli      # gives you the `hearth` command
 hearth init ~/hearth           # create a vault (also an Obsidian vault)
 ```
 
+`hearth init` also drops a Hearth block into `./AGENTS.md` so agents use the memory
+proactively (call `memory_context` at the start, `memory_save` on decisions). Run
+`hearth rules` to add it to your other projects, or `hearth init --no-agents` to skip.
+
 Connect any MCP-capable agent (Claude, Cursor, Antigravity, Codex…) by adding this to its MCP config — no clone, no build:
 
 ```json

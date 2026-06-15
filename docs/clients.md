@@ -133,3 +133,7 @@ paths — just `npx`:
 
 A good habit: have the agent call `memory_context` at the start of a session,
 and `memory_save` whenever a durable decision or preference is established.
+
+You don't have to remember to ask, though — `hearth init` (and `hearth rules`)
+writes these instructions into your project's `AGENTS.md`, which agents read
+automatically, so they pick up the habit on their own.
