@@ -33,7 +33,7 @@ const program = new Command();
 program
   .name('hearth')
   .description('Hearth — local-first shared memory for AI agents (and your second brain)')
-  .version('0.1.1')
+  .version('0.1.2')
   .option('--vault <path>', 'path to the Hearth vault (else $HEARTH_VAULT or nearest vault)');
 
 function vaultOption(): string | undefined {

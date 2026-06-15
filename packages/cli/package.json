@@ -1,6 +1,6 @@
 {
   "name": "hearth-cli",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Hearth command-line interface.",
   "license": "MIT",
   "author": "Tushar",
