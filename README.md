@@ -29,24 +29,36 @@ with Git, or move anywhere.
 
 ## Quick Start
 
-Install the CLI and create a vault:
+Run the guided setup:
+
+```bash
+npx hearth-cli setup
+```
+
+That command creates a vault at `~/hearth`, configures detected MCP clients,
+adds Hearth instructions to the current repo's `AGENTS.md`, and runs a
+save/search check.
+
+You can also target a specific client:
+
+```bash
+npx hearth-cli setup --client codex
+npx hearth-cli setup --client cursor
+npx hearth-cli setup --client claude-desktop
+```
+
+After setup, restart your MCP client and ask it what it remembers from Hearth.
+
+Manual CLI usage still works:
 
 ```bash
 npm install -g hearth-cli
-hearth init ~/hearth
+hearth save "Postgres is the datastore" -c "We chose Postgres for relational integrity." -t decision -s project -p my-app
+
+hearth search postgres
 ```
 
-Save and search a memory:
-
-```bash
-hearth --vault ~/hearth save "Postgres is the datastore" \
-  -c "We chose Postgres because relational integrity matters here." \
-  -t decision -s project -p my-app --tags architecture,db
-
-hearth --vault ~/hearth search postgres
-```
-
-Connect an MCP client:
+Manual MCP config, if you prefer to wire clients yourself:
 
 ```json
 {
@@ -132,12 +144,15 @@ global | project | session
 ## CLI
 
 ```bash
+hearth setup                    # guided vault + client + AGENTS.md setup
+hearth setup --client codex     # configure one client
+hearth setup --all              # configure every supported client
 hearth init [dir]               # create or repair a vault
 hearth save "<title>" -c "..."  # save a memory
 hearth search <query>           # keyword search
 hearth list                     # recent notes
 hearth reindex                  # rebuild SQLite from markdown
-hearth doctor                   # compare on-disk notes with indexed notes
+hearth doctor --fix             # repair index drift and detected setup gaps
 hearth rules [dir]              # add Hearth instructions to AGENTS.md
 ```
 

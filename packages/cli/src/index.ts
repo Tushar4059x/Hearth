@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { createInterface } from 'node:readline/promises';
 import { Command } from 'commander';
 import {
   Hearth,
@@ -16,6 +18,15 @@ import {
   type Scope,
   type Confidence,
 } from 'hearth-core';
+import {
+  SETUP_CLIENTS,
+  clientConfigurationStatus,
+  detectSetupClients,
+  parseSetupClients,
+  runSetup,
+  type SetupAction,
+  type SetupClient,
+} from './setup.js';
 
 const program = new Command();
 
@@ -69,6 +80,90 @@ function parseLimit(value: string | undefined, fallback: number): number {
   }
   return n;
 }
+
+function setupVaultPath(dir: string): string {
+  return path.resolve(vaultOption() ?? dir);
+}
+
+function printActions(actions: SetupAction[]): void {
+  for (const action of actions) {
+    const detail = action.detail ? ` (${action.detail})` : '';
+    console.log(`  ${action.status.padEnd(12)} ${action.label}${detail}`);
+  }
+}
+
+async function confirmSetup(yes: boolean): Promise<boolean> {
+  if (yes || !process.stdin.isTTY) return true;
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    const answer = await rl.question('Continue? [y/N] ');
+    return /^(y|yes)$/i.test(answer.trim());
+  } finally {
+    rl.close();
+  }
+}
+
+function selectedSetupClients(clientOpt: string | undefined, all: boolean): SetupClient[] {
+  if (all) return [...SETUP_CLIENTS];
+  return parseSetupClients(clientOpt) ?? detectSetupClients();
+}
+
+program
+  .command('setup')
+  .description('Set up a Hearth vault, MCP client config, AGENTS.md, and a smoke check')
+  .argument('[dir]', 'directory for the vault', defaultVaultPath())
+  .option('--client <list>', `client(s): ${SETUP_CLIENTS.join(', ')}; comma-separated; use "all" for every supported client`)
+  .option('--all', 'configure every supported client')
+  .option('--dry-run', 'show what would change without writing files')
+  .option('-y, --yes', 'skip confirmation')
+  .option('--no-agents', 'skip writing Hearth usage instructions to ./AGENTS.md')
+  .action(
+    async (
+      dir: string,
+      o: { client?: string; all?: boolean; dryRun?: boolean; yes?: boolean; agents?: boolean },
+    ) => {
+      const vault = setupVaultPath(dir);
+      const clients = selectedSetupClients(o.client, o.all === true);
+      const options = {
+        vault,
+        clients,
+        agents: o.agents !== false,
+        dryRun: o.dryRun === true,
+        cwd: process.cwd(),
+      };
+
+      console.log(`Hearth setup`);
+      console.log(`vault: ${vault}`);
+      console.log(`clients: ${clients.length ? clients.join(', ') : 'none detected'}`);
+      console.log('');
+
+      const preview = runSetup({ ...options, dryRun: true });
+      console.log(o.dryRun ? 'Dry run:' : 'Plan:');
+      printActions(preview);
+
+      if (o.dryRun) return;
+      if (!(await confirmSetup(o.yes === true))) {
+        console.log('setup cancelled.');
+        return;
+      }
+
+      console.log('');
+      console.log('Applying:');
+      const actions = runSetup(options);
+      printActions(actions);
+
+      if (clients.length === 0) {
+        console.log('');
+        console.log(`No installed clients were detected. Run one of these when ready:`);
+        console.log(`  hearth setup --client codex`);
+        console.log(`  hearth setup --client cursor`);
+        console.log(`  hearth setup --client claude-desktop`);
+      } else {
+        console.log('');
+        console.log('Restart your MCP client, then ask it what it remembers from Hearth.');
+      }
+    },
+  );
 
 program
   .command('init')
@@ -204,10 +299,19 @@ program
 program
   .command('doctor')
   .description('Check vault health')
-  .action(() => {
-    const h = openVault();
+  .option('--fix', 'repair index drift, AGENTS.md, and detected MCP client config')
+  .action((o: { fix?: boolean }) => {
+    let h: Hearth;
     try {
-      const vault = h.vault;
+      h = openVault();
+    } catch (err) {
+      if (!o.fix) throw err;
+      const vault = initVault(path.resolve(vaultOption() ?? defaultVaultPath()));
+      h = new Hearth(vault);
+    }
+
+    let vault = h.vault;
+    try {
       const p = hearthPaths(vault);
       console.log(`vault:   ${vault}`);
       console.log(`config:  ${isVault(vault) ? 'ok' : 'MISSING'}`);
@@ -220,12 +324,38 @@ program
       console.log(`notes on disk:  ${onDisk}`);
       console.log(`notes indexed:  ${indexed}`);
       if (onDisk !== indexed) {
-        console.log('⚠ index drift — run `hearth reindex`');
+        if (o.fix) {
+          const n = h.reindex();
+          console.log(`fixed index drift: reindexed ${n} note(s).`);
+        } else {
+          console.log('index drift: run `hearth reindex` or `hearth doctor --fix`');
+        }
       } else {
-        console.log('✓ index in sync');
+        console.log('index in sync');
+      }
+
+      console.log('');
+      console.log('client config:');
+      for (const client of SETUP_CLIENTS) {
+        console.log(`  ${client}: ${clientConfigurationStatus(client)}`);
       }
     } finally {
+      vault = h.vault;
       h.close();
+    }
+
+    if (o.fix) {
+      const clients = detectSetupClients();
+      const actions = runSetup({
+        vault,
+        clients,
+        agents: true,
+        dryRun: false,
+        cwd: process.cwd(),
+      });
+      console.log('');
+      console.log('fixes:');
+      printActions(actions);
     }
   });
 
