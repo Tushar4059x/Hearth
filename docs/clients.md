@@ -106,7 +106,7 @@ env = { HEARTH_VAULT = "/Users/tushar/hearth" }
 
 ## After publishing to npm
 
-Once `@hearth/mcp` is published, every recipe above simplifies to no absolute
+Once `hearth-mcp` is published, every recipe above simplifies to no absolute
 paths — just `npx`:
 
 ```json
@@ -114,7 +114,7 @@ paths — just `npx`:
   "mcpServers": {
     "hearth": {
       "command": "npx",
-      "args": ["-y", "@hearth/mcp"],
+      "args": ["-y", "hearth-mcp"],
       "env": { "HEARTH_VAULT": "/Users/tushar/hearth" }
     }
   }

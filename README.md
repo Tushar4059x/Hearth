@@ -37,9 +37,9 @@ wire up Claude, Cursor, Antigravity, or Codex.
 
 | Package | What it does |
 | --- | --- |
-| [`@hearth/core`](packages/core) | The engine: markdown note store + SQLite FTS5 index |
-| [`@hearth/cli`](packages/cli) | `hearth init / save / search / list / reindex / doctor` |
-| [`@hearth/mcp`](packages/mcp) | MCP server exposing `memory_search / save / get / list / context` |
+| [`hearth-core`](packages/core) | The engine: markdown note store + SQLite FTS5 index |
+| [`hearth-cli`](packages/cli) | `hearth init / save / search / list / reindex / doctor` |
+| [`hearth-mcp`](packages/mcp) | MCP server exposing `memory_search / save / get / list / context` |
 
 ## Quick start (dev)
 

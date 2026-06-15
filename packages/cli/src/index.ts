@@ -12,7 +12,7 @@ import {
   SCOPES,
   type NoteType,
   type Scope,
-} from '@hearth/core';
+} from 'hearth-core';
 
 const program = new Command();
 

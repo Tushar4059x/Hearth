@@ -13,7 +13,7 @@ import {
   type NoteType,
   type Scope,
   type Confidence,
-} from '@hearth/core';
+} from 'hearth-core';
 
 const noteType = z.enum([...NOTE_TYPES] as [NoteType, ...NoteType[]]);
 const scopeEnum = z.enum([...SCOPES] as [Scope, ...Scope[]]);

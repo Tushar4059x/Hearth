@@ -1,5 +1,5 @@
 {
-  "name": "@hearth/cli",
+  "name": "hearth-cli",
   "version": "0.1.0",
   "description": "Hearth command-line interface.",
   "license": "MIT",
@@ -18,10 +18,11 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@hearth/core": "workspace:*",
+    "hearth-core": "workspace:^",
     "commander": "^12.1.0"
   },
   "devDependencies": {
